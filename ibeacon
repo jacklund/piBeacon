@@ -1,0 +1,44 @@
+#!/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:$PATH
+
+DESC="iBeacon Application Software"
+PIDFILE=/var/run/ibeacon.pid
+SCRIPTNAME=/etc/init.d/ibeacon
+
+start() {
+	. /etc/ibeacon.conf
+	echo "Launching virtual iBeacon..."
+	sudo hciconfig $BLUETOOTH_DEVICE up
+	sudo hciconfig $BLUETOOTH_DEVICE noleadv
+	sudo hcitool -i hci0 cmd 0x08 0x0008 1e 02 01 1a 1a ff 4c 00 02 15 $UUID $MAJOR $MINOR $POWER 00 00 00 00 00 00 00 00 00 00 00 00 00
+	sudo hciconfig $BLUETOOTH_DEVICE leadv 0
+	echo "Complete"
+}
+
+stop() {
+	. /etc/ibeacon.conf
+	echo "Disabling virtual iBeacon..."
+	sudo hciconfig $BLUETOOTH_DEVICE noleadv
+	echo "Complete"
+}
+
+case "$1" in
+start)
+        printf "%-50s" "Starting ibeacon..."
+        cd /home/pi
+	start
+;;
+stop)
+        printf "%-50s" "Stopping ibeacon..."
+        cd /home/pi
+        stop
+;;
+restart)
+        stop
+        start
+;;
+*)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+esac
+
